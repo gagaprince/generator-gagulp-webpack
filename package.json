@@ -1,6 +1,6 @@
 {
   "name": "generator-gagulp-webpack",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "a generator for gulp and webpack",
   "homepage": "https://github.com/gagaprince/gulp_generator",
   "author": {

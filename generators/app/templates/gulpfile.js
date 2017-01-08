@@ -13,16 +13,45 @@ var rev = require('gulp-rev');
 var revCollector = require('gulp-rev-collector');
 
 var connect = require('gulp-connect');
-var del = require('del');
+var delNative = require('del');
 var vinylPaths = require('vinyl-paths');
 var webpack = require('gulp-webpack');
 var gulpif = require('gulp-if');
+//var bower = require('gulp-bower');
 
-var publishPath = 'dist';
-var devWebpackPath = 'dist_webpack';
+var conf = require('./confige/conf');
+
+var publishPath = conf.publishPath||'dist';
+var devWebpackPath = conf.devWebpackPath||'dist_webpack';
 
 var currentPath = devWebpackPath;
 var devMode = true;
+
+var del = function(patterns, opts){
+    var op;
+    if(opts){
+        op = opts;
+    }else{
+        op = {}
+    }
+    op["force"]=true;
+    return delNative(patterns, op);
+}
+del.sync=function(patterns, opts){
+    var op;
+    if(opts){
+        op = opts;
+    }else{
+        op = {}
+    }
+    op["force"]=true;
+    return delNative.sync(patterns, op);
+}
+
+/*gulp.task('bower',function(){
+ return bower()
+ .pipe(gulp.dest('lib/'));
+ });*/
 
 gulp.task("css",function(cb){
     var cssDestPath = currentPath+'/src/css';
@@ -46,6 +75,16 @@ gulp.task("js",function(cb){
         .pipe(gulp.dest(jsDestPath))
         .pipe(rev.manifest())
         .pipe(gulp.dest(jsDestPath));
+});
+
+gulp.task("lib",function(){
+    var libDestPath = currentPath+'/lib';
+    gulp.src('bower_components/ichartjs/ichart.1.2.min.js')
+        .pipe(gulp.dest(libDestPath));
+    gulp.src('bower_components/zepto/zepto.min.js')
+        .pipe(gulp.dest(libDestPath));
+    return gulp.src('bower_components/jQuery/dist/jquery.min.js')
+        .pipe(gulp.dest(libDestPath));
 });
 
 gulp.task("html",function(cb){
@@ -104,7 +143,7 @@ gulp.task('watch_dev',function(){
 gulp.task('server_start',function(){
     connect.server({
         name: 'Dev App',
-        root: ['dist_webpack'],
+        root: [devWebpackPath],
         port: 9990,
         livereload: true
     });
@@ -117,13 +156,13 @@ gulp.task('open_brower',['serve'],function(){
 gulp.task("publish",function(cb){
     currentPath =publishPath;
     devMode = false;
-    sequence('clean','js','css','html')(cb);
+    sequence('clean','lib','js','css','html')(cb);
 });
 
 gulp.task("publish_webpack",function(cb){
-    sequence('clean','js','css','html')(cb);
+    sequence('clean','lib','js','css','html')(cb);
 });
 
 gulp.task('serve',['publish_webpack','server_start','watch_dev']);
 
-gulp.task('default',['open_brower']);
+gulp.task('default',['serve']);
